@@ -1,4 +1,4 @@
-# cyberark-getOtp
+# cyberark getOTP
 Time-base One-Time Password Algorithm (RFC 6238) with CyberArk integration of seed as secret retrieval
 
 This is an implementation of the RFC 6238 Time-Based One-Time Password Algorithm draft based upon the HMAC-based One-Time Password (HOTP) algorithm (RFC 4226). This is a time based variant of the HOTP algorithm providing short-lived OTP values.
