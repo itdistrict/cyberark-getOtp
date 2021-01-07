@@ -9,8 +9,8 @@ Credits for the HOTP powershell implementation goes to Jon Friesen and his provi
 Calculate OTP from a CyberArk Account (Default Auth Method LDAP, )
 .\CyberArk-GetOTP.ps1 -AccountSearch "root-mfa,1.1.1.1&filter=safeName eq AWS_ROOT"
 .EXAMPLE
-Calculate OTP from a Seed directly (Default Digits = 6, Time Step Interval = 30s)
-.\CyberArk-GetOTP.ps1 -OTPOnly -Seed "JBSWY3DPEHPK3PXP"
+Calculate OTP from a seed secret directly (Default Digits = 6, Time Step Interval = 30s)
+.\CyberArk-GetOTP.ps1 -OTPOnly -Secret "JBSWY3DPEHPK3PXP"
 
 #>
 [CmdletBinding(DefaultParametersetName = "CyberArk")]
@@ -41,13 +41,13 @@ param
 
 function Get-Otp() {
     param(
-        [Parameter(Mandatory = $true)]$Secret,
+        [Parameter(Mandatory = $true)]$secret,
         $digits = 6,
         $timeStep = 30
     )
     
     $hmac = New-Object -TypeName System.Security.Cryptography.HMACSHA1
-    $hmac.key = Convert-HexToByteArray(Convert-Base32ToHex(($Secret.ToUpper())))
+    $hmac.key = Convert-HexToByteArray(Convert-Base32ToHex(($secret.ToUpper())))
     $timeBytes = Get-TimeByteArray $timeStep
     $randHash = $hmac.ComputeHash($timeBytes)
 
