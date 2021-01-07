@@ -130,7 +130,7 @@ if ($psCertValidation) { [System.Net.ServicePointManager]::ServerCertificateVali
 $ErrorActionPreference = "Stop"
 
 # Get API creds
-$caCredentials = Get-Credential -Message "Please enter your CyberArk Username and Password" 
+$caCredentials = Get-Credential -Message "Please enter your $AuthMethod Username and Password" 
 
 # Logon
 $header = @{ }
@@ -159,15 +159,15 @@ else {
 }
 
 # Get Account Details
-if (![string]::IsNullOrEmpty($account.platformAccountProperties.Duration)) { $otpDuration = $account.platformAccountProperties.Duration }
-if (![string]::IsNullOrEmpty($account.platformAccountProperties.Timeout)) { $otpSize = $account.platformAccountProperties.Timeout }
+if (![string]::IsNullOrEmpty($account.platformAccountProperties.Duration)) { $timeStep = $account.platformAccountProperties.Duration } else { $otpDuration = $TimeStep }
+if (![string]::IsNullOrEmpty($account.platformAccountProperties.Timeout)) { $digits = $account.platformAccountProperties.Timeout } else { $otpSize = $Digits }
 
 # Get Secret 
 $secretUrl = $PvwaUrl + "/api/Accounts/$($account.id)/Password/Retrieve"
 $secret = $(Invoke-WebRequest -Uri $secretUrl -Headers $header -Method Post -UseBasicParsing).content | ConvertFrom-Json
 
 # Calculate OTP
-Write-Host "Next OTP for $($account.name) with time-step $otpDuration and digits-size $otpSize :`n$(Get-Otp $secret $otpSize $otpDuration)"
+Write-Host "Next OTP for $($account.name) with time-step $timeStep and digits-size $digits :`n$(Get-Otp $secret $digits $timeStep)"
 
 # Logoff
 try { Invoke-WebRequest -Uri $( $baseURL + '/api/auth/Logoff') -Headers $header -UseBasicParsing -Method Post | Out-Null } catch { }
