@@ -5,6 +5,9 @@ This is an implementation of the RFC 6238 Time-Based One-Time Password Algorithm
 
 Credits for the HOTP powershell implementation goes to Jon Friesen and his provided TOTP powershell function https://gist.github.com/jonfriesen/234c7471c3e3199f97d5
 
+## CyberArk Platform
+The example platform MFA-TOTP_Platform.zip can be imported. It takes existing parameters (Timeout/Duration) for OTP size and duration.
+
 ## Parameters
 Calculate OTP from a CyberArk Account (Default Auth Method LDAP, )
 
