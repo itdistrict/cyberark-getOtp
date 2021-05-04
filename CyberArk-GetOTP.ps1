@@ -9,6 +9,9 @@ Credits for the HOTP powershell implementation goes to Jon Friesen and his provi
 Calculate OTP from a CyberArk Account (Default Auth Method LDAP, )
 .\CyberArk-GetOTP.ps1 -AccountSearch "root-mfa,1.1.1.1&filter=safeName eq AWS_ROOT"
 .EXAMPLE
+Enter the seed secret securely and calculate the OTP directly (Default Digits = 6, Time Step Interval = 30s)
+.\CyberArk-GetOTP.ps1 -OTPOnly
+.EXAMPLE
 Calculate OTP from a seed secret directly (Default Digits = 6, Time Step Interval = 30s)
 .\CyberArk-GetOTP.ps1 -OTPOnly -Secret "JBSWY3DPEHPK3PXP"
 
@@ -19,8 +22,8 @@ param
     [Parameter(ParameterSetName = "OTPOnly", Mandatory = $true)]
     [switch]$OTPOnly,
 
-    [Parameter(ParameterSetName = "OTPOnly", Mandatory = $true)]
-    [String]$Secret,
+    [Parameter(ParameterSetName = "OTPOnly")]
+    [securestring]$Secret,
 
     [Parameter(ParameterSetName = "OTPOnly", Mandatory = $false)]
     [String]$TimeStep = "30",
@@ -36,7 +39,10 @@ param
     [String]$AuthMethod = "LDAP",
     
     [Parameter(ParameterSetName = "CyberArk", Mandatory = $false)]
-    [String]$PvwaUrl = "https://pvwa.acme.com/PasswordVault"
+    [String]$PvwaUrl = "https://pvwa.acme.com/PasswordVault",
+    
+    [Parameter()]
+    [bool]$CopyToClipboard = $true
 )
 
 function Get-Otp() {
@@ -65,7 +71,7 @@ function Get-Otp() {
 
 function Get-TimeByteArray($timeStep) {
     $span = (New-TimeSpan -Start (Get-Date -Year 1970 -Month 1 -Day 1 -Hour 0 -Minute 0 -Second 0) -End (Get-Date).ToUniversalTime()).TotalSeconds
-    $unixTime = [Convert]::ToInt64([Math]::Floor($span/$timeStep))
+    $unixTime = [Convert]::ToInt64([Math]::Floor($span / $timeStep))
     $byteArray = [BitConverter]::GetBytes($unixTime)
     [array]::Reverse($byteArray)
     return $byteArray
@@ -74,7 +80,7 @@ function Get-TimeByteArray($timeStep) {
 function Convert-HexToByteArray($hexString) {
     $byteArray = New-Object byte[] ($hexString.Length / 2)
     For ($i = 0; $i -lt $hexString.Length; $i += 2) {
-        $byteArray[$i/2] = [Convert]::ToByte($hexString.Substring($i, 2), 16)
+        $byteArray[$i / 2] = [Convert]::ToByte($hexString.Substring($i, 2), 16)
     }
     return $byteArray
 }
@@ -118,7 +124,17 @@ function Add-LeftPad($str, $len, $pad) {
 
 # Return calculated OTP
 if ($OTPOnly) {
-    Write-Host "Next OTP:`n$(Get-Otp $Secret $Digits $TimeStep)"
+    if (!$Secret) { 
+        $Secret = Read-Host -assecurestring "Please enter the Seed/Secret to calculate the OTP:" 
+    }
+    $Seed = [System.Net.NetworkCredential]::new("", $Secret).Password
+    $OTP = Get-Otp $Seed $Digits $TimeStep
+    Write-Host "Next OTP with time-step $TimeStep and digits-size $Digits`:"
+    Write-Host -ForegroundColor Cyan $OTP
+    If ($CopyToClipboard) { 
+        Set-Clipboard -Value $OTP
+        Write-Host -ForegroundColor Green "`nCopied to clipboard!" 
+    }
     exit
 }
 
@@ -167,7 +183,14 @@ $secretUrl = $PvwaUrl + "/api/Accounts/$($account.id)/Password/Retrieve"
 $secret = $(Invoke-WebRequest -Uri $secretUrl -Headers $header -Method Post -UseBasicParsing).content | ConvertFrom-Json
 
 # Calculate OTP
-Write-Host "Next OTP for $($account.name) with time-step $timeStep and digits-size $digits :`n$(Get-Otp $secret $digits $timeStep)"
+$OTP = Get-Otp $Seed $Digits $TimeStep
+Write-Host "Next OTP for $($account.name) with time-step $timeStep and digits-size $digits`:"
+Write-Host -ForegroundColor Cyan $OTP
+
+If ($CopyToClipboard) { 
+    Set-Clipboard -Value $OTP
+    Write-Host -ForegroundColor Green "`nCopied to clipboard!" 
+}
 
 # Logoff
 try { Invoke-WebRequest -Uri $( $baseURL + '/api/auth/Logoff') -Headers $header -UseBasicParsing -Method Post | Out-Null } catch { }
