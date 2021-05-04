@@ -9,7 +9,7 @@ Credits for the HOTP powershell implementation goes to Jon Friesen and his provi
 The example platform MFA-TOTP_Platform.zip can be imported. It takes existing parameters (Timeout/Duration) for OTP size and duration.
 
 ## Parameters
-Calculate OTP from a CyberArk Account (Default Auth Method LDAP, )
+Calculate OTP from a CyberArk Account
 
 ### CyberArk
 Default Parameter set
@@ -21,8 +21,7 @@ See also:
 https://docs.cyberark.com/Product-Doc/OnlineHelp/PAS/Latest/en/Content/SDK/GetAccounts.htm?tocpath=Developer%7CREST%20APIs%7CAccounts%7C_____1
 
 #### -AuthMethod
-RADIUS, LDAP or CyberArk
-Default: LDAP
+RADIUS, LDAP or CyberArk (Default: LDAP)
 
 #### -PvwaUrl
 Pvwa BaseUrl and Applicationlike: "https://pvwa.acme.com/PasswordVault"
@@ -34,12 +33,10 @@ Generate a TOTP based on a given seed without any CyberArk connection/retrieval
 BASE32 seed
 
 #### -TimeStep
-Time step windows in seconds
-Default: 30
+Time step windows in seconds (Default: 30)
 
 #### -Digits
-Number of digits of the calculated OTP
-Default: 6
+Number of digits of the calculated OTP (Default: 6)
 
 ## Examples
 Calculate OTP from a CyberArk Account (Default Auth Method LDAP, )
