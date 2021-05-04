@@ -125,7 +125,7 @@ function Add-LeftPad($str, $len, $pad) {
 # Return calculated OTP
 if ($OTPOnly) {
     if (!$Secret) { 
-        $Secret = Read-Host -assecurestring "Please enter the Seed/Secret to calculate the OTP:" 
+        $Secret = Read-Host -assecurestring "Please enter the Seed/Secret to calculate the OTP" 
     }
     $Seed = [System.Net.NetworkCredential]::new("", $Secret).Password
     $OTP = Get-Otp $Seed $Digits $TimeStep
