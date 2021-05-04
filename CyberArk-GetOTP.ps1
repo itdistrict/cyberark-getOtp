@@ -13,7 +13,7 @@ Enter the seed secret securely and calculate the OTP directly (Default Digits = 
 .\CyberArk-GetOTP.ps1 -OTPOnly
 .EXAMPLE
 Calculate OTP from a seed secret directly (Default Digits = 6, Time Step Interval = 30s)
-.\CyberArk-GetOTP.ps1 -OTPOnly -Secret "JBSWY3DPEHPK3PXP"
+.\CyberArk-GetOTP.ps1 -OTPOnly -Secret $secureString
 
 #>
 [CmdletBinding(DefaultParametersetName = "CyberArk")]
