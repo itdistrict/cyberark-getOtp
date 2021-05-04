@@ -166,24 +166,35 @@ $accountURL = $PvwaUrl + "/api/Accounts?search=$AccountSearch"
 $accountsResult = $(Invoke-WebRequest -Uri $accountURL -Headers $header -Method Get -UseBasicParsing).content | ConvertFrom-Json
 if ($null -ne $accountsResult.value -and $accountsResult.value.Length -gt 0) {
     if ($accountsResult.value.Length -gt 1) {
-        Write-Error "Multiple accounts found ($accountsResult.value.Length) for search $AccountSearch : $($accountsResult.value)"
+        Write-Warning "Multiple accounts found ($accountsResult.value.Length) for search $AccountSearch - will identify MFA parameters`n"
+        foreach ($accountValue in $accountsResult.value) {
+            if ( ([string]::IsNullOrEmpty($accountValue.platformAccountProperties.Duration)) -or ([string]::IsNullOrEmpty($accountValue.platformAccountProperties.Timeout)) ) {
+                continue 
+            }
+            else {
+                $account = $accountValue
+                break
+            }
+        }
     }
-    $account = $accountsResult.value[0]
+    else {
+        $account = $accountsResult.value[0]
+    }
 }
 else {
-    Write-Error "Account not found"
+    Write-Error "No MFA account not found"
 }
 
 # Get Account Details
-if (![string]::IsNullOrEmpty($account.platformAccountProperties.Duration)) { $timeStep = $account.platformAccountProperties.Duration } else { $otpDuration = $TimeStep }
-if (![string]::IsNullOrEmpty($account.platformAccountProperties.Timeout)) { $digits = $account.platformAccountProperties.Timeout } else { $otpSize = $Digits }
+if (![string]::IsNullOrEmpty($account.platformAccountProperties.Duration)) { $timeStep = $account.platformAccountProperties.Duration }
+if (![string]::IsNullOrEmpty($account.platformAccountProperties.Timeout)) { $digits = $account.platformAccountProperties.Timeout }
 
 # Get Secret 
 $secretUrl = $PvwaUrl + "/api/Accounts/$($account.id)/Password/Retrieve"
-$secret = $(Invoke-WebRequest -Uri $secretUrl -Headers $header -Method Post -UseBasicParsing).content | ConvertFrom-Json
+$seed = $(Invoke-WebRequest -Uri $secretUrl -Headers $header -Method Post -UseBasicParsing).content | ConvertFrom-Json
 
 # Calculate OTP
-$OTP = Get-Otp $Seed $Digits $TimeStep
+$OTP = Get-Otp $seed $digits $timeStep
 Write-Host "Next OTP for $($account.name) with time-step $timeStep and digits-size $digits`:"
 Write-Host -ForegroundColor Cyan $OTP
 
